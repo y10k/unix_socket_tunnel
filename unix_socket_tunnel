@@ -91,10 +91,15 @@ begin
     end
   }
 
+  STDLOG.info("close listen socket: #{listen_socket_path}")
+  server_socket.close
+
   STDLOG.info("wait to end of connections")
   for thread in tunnel_thread_group.list
     thread.join
   end
+
+  STDLOG.info("end of tunnel")
 rescue
   STDLOG.fatal($!)
   exit(1)

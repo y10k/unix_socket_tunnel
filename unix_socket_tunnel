@@ -20,22 +20,22 @@ def ping_process(pid)
   end
 end
 
-def start_tunnel(socket1, addr1, socket2, addr2, chunk_bytes: 1024*8)
+def start_tunnel(read_socket, read_address, write_socket, write_address, chunk_bytes: 1024*8)
   Thread.new{
-    STDLOG.info("start tunnel: #{addr1} -> #{addr2}")
+    STDLOG.info("start tunnel: #{read_address} -> #{write_address}")
     begin
       while (true)
-        STDLOG.info("tunnel read: #{addr1} -> #{addr2}")
-        data = socket1.readpartial(chunk_bytes)
-        STDLOG.info("tunnel write: #{addr1} -> #{addr2}: #{data.bytesize} bytes")
-        socket2.write(data)
+        STDLOG.info("tunnel read: #{read_address} -> #{write_address}")
+        data = read_socket.readpartial(chunk_bytes)
+        STDLOG.info("tunnel write: #{read_address} -> #{write_address}: #{data.bytesize} bytes")
+        write_socket.write(data)
       end
     rescue EOFError, SystemCallError
       STDLOG.debug($!)
     ensure
-      STDLOG.info("stop tunnel: #{addr1} -> #{addr2}")
-      socket1.close_read
-      socket2.close_write
+      STDLOG.info("stop tunnel: #{read_address} -> #{write_address}")
+      read_socket.close_read
+      write_socket.close_write
     end
   }
 end

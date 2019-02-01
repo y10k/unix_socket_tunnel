@@ -7,6 +7,7 @@ require 'optparse'
 require 'socket'
 
 STDLOG = Logger.new(STDOUT)
+STDLOG.level = Logger::INFO
 
 def ping_process(pid)
   begin
@@ -64,6 +65,7 @@ end
 connect_socket_path = ARGV.shift
 listen_socket_path = ARGV.shift
 
+STDLOG.info("log level: #{Logger::SEV_LABEL[STDLOG.level] || STDLOG.level}")
 STDLOG.info("watch pid: #{watch_pid}")
 STDLOG.info("accept polling timeout: #{accept_polling_timeout_seconds} s")
 

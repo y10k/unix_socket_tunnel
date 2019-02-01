@@ -24,9 +24,10 @@ def start_tunnel(read_socket, read_address, write_socket, write_address, chunk_b
   Thread.new{
     STDLOG.info("start tunnel: #{read_address} -> #{write_address}")
     begin
+      data = ''
       while (true)
         STDLOG.info("tunnel read: #{read_address} -> #{write_address}")
-        data = read_socket.readpartial(chunk_bytes)
+        read_socket.readpartial(chunk_bytes, data)
         STDLOG.info("tunnel write: #{read_address} -> #{write_address}: #{data.bytesize} bytes")
         write_socket.write(data)
       end

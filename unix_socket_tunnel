@@ -54,10 +54,10 @@ opts.on('-l', '--log-level=LEVEL', %w[ debug info warn error fatal ]) {|level|
 opts.on('-w', '--watch-pid=PID', Integer) {|pid|
   watch_pid = pid
 }
-opts.on('-t', '--accept-timeout=SECONDS', Float) {|timeout_seconds|
+opts.on('--accept-timeout=SECONDS', Float) {|timeout_seconds|
   accept_polling_timeout_seconds = timeout_seconds
 }
-opts.on('-c', '--io-chunk-size=BYTES', Integer) {|bytes|
+opts.on('--io-chunk-size=BYTES', Integer) {|bytes|
   io_chunk_bytes = bytes
 }
 opts.on('-u', '--umask=OCTETS', Integer) {|octets|

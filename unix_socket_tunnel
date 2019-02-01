@@ -3,10 +3,10 @@
 
 require 'io/wait'
 require 'logger'
+require 'optparse'
 require 'socket'
 
 STDLOG = Logger.new(STDOUT)
-STDLOG.level = Logger::DEBUG
 
 def ping_process(pid)
   begin
@@ -38,18 +38,31 @@ def start_tunnel(socket1, addr1, socket2, addr2, chunk_bytes: 1024*8)
   }
 end
 
+watch_pid = Process.ppid
+accept_polling_timeout_seconds = 0.1
+
+opts = OptionParser.new
+opts.banner = "Usage: #{File.basename($0)} [options] CONNECT_PATH LISTEN_PATH"
+opts.on('-l', '--log-level=LEVEL', %w[ debug info warn error fatal ]) {|level|
+  STDLOG.level = level
+}
+opts.on('-w', '--watch-pid=PID', Integer) {|pid|
+  watch_pid = pid
+}
+opts.on('-t', '--accept-timeout=SECONDS', Float) {|timeout_seconds|
+  accept_polling_timeout_seconds = timeout_seconds
+}
+opts.parse!
+
 if (ARGV.length != 2) then
-  puts "Usage: #{File.basename($0)} [CONNECT] [LISTEN]"
+  puts opts.banner
   exit(1)
 end
 
 connect_socket_path = ARGV.shift
 listen_socket_path = ARGV.shift
 
-watch_pid = Process.ppid
 STDLOG.info("watch pid: #{watch_pid}")
-
-accept_polling_timeout_seconds = 0.1
 STDLOG.info("accept polling timeout: #{accept_polling_timeout_seconds} s")
 
 unless (File.socket? connect_socket_path) then

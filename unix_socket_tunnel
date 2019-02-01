@@ -25,13 +25,12 @@ def start_tunnel(socket1, addr1, socket2, addr2, chunk_bytes: 1024*8)
     STDLOG.info("start tunnel: #{addr1} -> #{addr2}")
     begin
       while (true)
-        STDLOG.info("tunnel read: #{addr1}")
+        STDLOG.info("tunnel read: #{addr1} -> #{addr2}")
         data = socket1.readpartial(chunk_bytes)
-        STDLOG.info("tunnel write: #{addr2} #{data.bytesize} bytes")
+        STDLOG.info("tunnel write: #{addr1} -> #{addr2}: #{data.bytesize} bytes")
         socket2.write(data)
       end
     rescue EOFError, SystemCallError
-      STDLOG.info("exception: #{$!}")
       STDLOG.debug($!)
     ensure
       STDLOG.info("stop tunnel: #{addr1} -> #{addr2}")

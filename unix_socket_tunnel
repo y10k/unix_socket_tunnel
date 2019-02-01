@@ -7,7 +7,7 @@ require 'optparse'
 require 'socket'
 
 STDLOG = Logger.new(STDOUT)
-STDLOG.level = Logger::INFO
+STDLOG.level = Logger::WARN
 
 def ping_process(pid)
   begin

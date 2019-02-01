@@ -44,6 +44,7 @@ watch_pid = Process.ppid
 accept_polling_timeout_seconds = 0.1
 io_chunk_bytes = 1024 * 8
 File.umask(0077)
+dir_access_deny_mode_mask = 0077
 
 opts = OptionParser.new
 opts.banner = "Usage: #{File.basename($0)} [options] CONNECT_PATH LISTEN_PATH"
@@ -62,6 +63,9 @@ opts.on('-c', '--io-chunk-size=BYTES', Integer) {|bytes|
 opts.on('-u', '--umask=OCTETS', Integer) {|octets|
   File.umask(octets)
 }
+opts.on('--dir-access-deny-mode-mask=OCTETS', Integer) {|octets|
+  dir_access_deny_mode_mask = octets
+}
 opts.parse!
 
 if (ARGV.length != 2) then
@@ -77,9 +81,31 @@ STDLOG.info("watch pid: #{watch_pid}")
 STDLOG.info("accept polling timeout: #{accept_polling_timeout_seconds} s")
 STDLOG.info("IO chunk size: #{io_chunk_bytes} bytes")
 STDLOG.info("umask: #{"%04o" % File.umask}")
+STDLOG.info("directory access deny mode mask: #{"%04o" % dir_access_deny_mode_mask}")
 
 unless (File.socket? connect_socket_path) then
   STDLOG.fatal("not found a connect socket: #{connect_socket_path}")
+  exit(1)
+end
+
+listen_socket_dir = File.dirname(listen_socket_path)
+unless (File.directory? listen_socket_dir) then
+  STDLOG.fatal("not found a listen socket directory: #{listen_socket_dir}")
+  exit(1)
+end
+
+listen_socket_dir_stat = File.stat(listen_socket_dir)
+listen_socket_dir_mode = listen_socket_dir_stat.mode & 07777
+dir_access_deny_bits   = listen_socket_dir_stat.mode & dir_access_deny_mode_mask
+listen_socket_dir_mode_log    = '%04o' % listen_socket_dir_mode
+dir_access_deny_bits_log      = '%04o' % dir_access_deny_bits
+dir_access_deny_mode_mask_log = '%04o' % dir_access_deny_mode_mask
+
+STDLOG.info("directory access mode: [#{listen_socket_dir}] #{listen_socket_dir_mode_log}")
+if (dir_access_deny_bits == 0) then
+  STDLOG.info("directory access allow: [#{listen_socket_dir}] #{dir_access_deny_bits_log}=#{listen_socket_dir_mode_log}&#{dir_access_deny_mode_mask_log}")
+else
+  STDLOG.fatal("directory access deny: [#{listen_socket_dir}] #{dir_access_deny_bits_log}=#{listen_socket_dir_mode_log}&#{dir_access_deny_mode_mask_log}")
   exit(1)
 end
 

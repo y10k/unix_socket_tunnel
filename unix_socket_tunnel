@@ -99,6 +99,13 @@ unless (File.directory? listen_socket_dir) then
 end
 
 listen_socket_dir_stat = File.stat(listen_socket_dir)
+if (listen_socket_dir_stat.owned?) then
+  STDLOG.info("owned directory: #{listen_socket_dir}")
+else
+  STDLOG.fatal("not owned directory: #{listen_socket_dir}")
+  exit(1)
+end
+
 listen_socket_dir_mode = listen_socket_dir_stat.mode & 07777
 dir_access_deny_bits   = listen_socket_dir_mode & dir_access_deny_mode_mask
 listen_socket_dir_mode_log    = '%04o' % listen_socket_dir_mode

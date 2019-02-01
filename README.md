@@ -22,7 +22,9 @@ It is supposed to tunnel a socket of ssh-agent.
 3. The default umask(2) is `0077`, and the tunnel destination socket
    refuses access from group and other. It is able to change umask
    with the `-u` option.
-4. It checks the security of the tunnel destination directory. It is
+4. It makes sure that the tunnel destination directory is owned. It is
+   able to ignore its owned with `--no-dir-owned` option.
+5. It checks the security of the tunnel destination directory. It is
    able to change security check level with
    `--dir-access-deny-mode-mask` option.
 
@@ -38,6 +40,7 @@ Usage: unix_socket_tunnel [options] CONNECT_PATH LISTEN_PATH
         --accept-timeout=SECONDS
         --io-chunk-size=BYTES
     -u, --umask=OCTETS
+        --[no-]dir-owned
         --dir-access-deny-mode-mask=OCTETS
 ```
 

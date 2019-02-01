@@ -12,7 +12,9 @@ def ping_process(pid)
   begin
     Process.kill(0, pid)
     true
-  rescue Errno::ESRCH, Errno::EPERM
+  rescue SystemCallError
+    STDLOG.info("process lost: #{pid}")
+    STDLOG.debug($!)
     false
   end
 end

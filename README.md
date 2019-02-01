@@ -41,3 +41,30 @@ Usage: unix_socket_tunnel [options] CONNECT_PATH LISTEN_PATH
         --dir-access-deny-mode-mask=OCTETS
 ```
 
+Example
+-------
+
+Setting to use ssh-agent in GNU screen.
+
+`.screenrc`:
+
+```
+setenv SCREEN_SESSION 1
+```
+
+`.bashrc`:
+
+```sh
+# ssh-agent forwarding in GNU Screen session
+if [ -n "$PS1" ]; then          # for interactive shell
+  saved_ssh_agent_sock="${HOME}/.ssh/agent_sock"
+  unix_socket_tunnel="${HOME}/git_work/unix_socket_tunnel/unix_socket_tunnel"
+
+  if [ -n "${SCREEN_SESSION}" ]; then # add to .screenrc: setenv SCREEN_SESSION 1
+    export SSH_AUTH_SOCK="${saved_ssh_agent_sock}"
+  elif shopt -q login_shell && [ -n "${SSH_AUTH_SOCK}" ] && [ -S "${SSH_AUTH_SOCK}" ]; then
+    rm -f "${saved_ssh_agent_sock}"
+    "${unix_socket_tunnel}" "${SSH_AUTH_SOCK}" "${saved_ssh_agent_sock}" &
+  fi
+fi
+```

@@ -25,7 +25,7 @@ def start_tunnel(socket1, addr1, socket2, addr2, chunk_bytes: 1024*8)
     STDLOG.info("start tunnel: #{addr1} -> #{addr2}")
     begin
       while (true)
-        STDLOG.info("tunnel read: #{addr1} max #{chunk_bytes} bytes")
+        STDLOG.info("tunnel read: #{addr1}")
         data = socket1.readpartial(chunk_bytes)
         STDLOG.info("tunnel write: #{addr2} #{data.bytesize} bytes")
         socket2.write(data)
@@ -43,6 +43,7 @@ end
 
 watch_pid = Process.ppid
 accept_polling_timeout_seconds = 0.1
+io_chunk_bytes = 1024 * 8
 
 opts = OptionParser.new
 opts.banner = "Usage: #{File.basename($0)} [options] CONNECT_PATH LISTEN_PATH"
@@ -54,6 +55,9 @@ opts.on('-w', '--watch-pid=PID', Integer) {|pid|
 }
 opts.on('-t', '--accept-timeout=SECONDS', Float) {|timeout_seconds|
   accept_polling_timeout_seconds = timeout_seconds
+}
+opts.on('-c', '--io-chunk-size=BYTES', Integer) {|bytes|
+  io_chunk_bytes = bytes
 }
 opts.parse!
 
@@ -68,6 +72,7 @@ listen_socket_path = ARGV.shift
 STDLOG.info("log level: #{Logger::SEV_LABEL[STDLOG.level] || STDLOG.level}")
 STDLOG.info("watch pid: #{watch_pid}")
 STDLOG.info("accept polling timeout: #{accept_polling_timeout_seconds} s")
+STDLOG.info("IO chunk size: #{io_chunk_bytes} bytes")
 
 unless (File.socket? connect_socket_path) then
   STDLOG.fatal("not found a connect socket: #{connect_socket_path}")
@@ -86,9 +91,11 @@ begin
       listen_socket = server_socket.accept
       connect_socket = UNIXSocket.new(connect_socket_path)
       tunnel_thread_group.add(start_tunnel(listen_socket, listen_socket.local_address.inspect_sockaddr,
-                                           connect_socket, connect_socket.remote_address.inspect_sockaddr))
+                                           connect_socket, connect_socket.remote_address.inspect_sockaddr,
+                                           chunk_bytes: io_chunk_bytes))
       tunnel_thread_group.add(start_tunnel(connect_socket, connect_socket.remote_address.inspect_sockaddr,
-                                           listen_socket, listen_socket.local_address.inspect_sockaddr))
+                                           listen_socket, listen_socket.local_address.inspect_sockaddr,
+                                           chunk_bytes: io_chunk_bytes))
       ping_process(watch_pid) or throw(:end_of_tunnel)
     end
   }

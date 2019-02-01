@@ -45,6 +45,7 @@ Example
 -------
 
 Setting to use ssh-agent in GNU screen.
+Ssh-agent has already started up at login.
 
 `.screenrc`:
 

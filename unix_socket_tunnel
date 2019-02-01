@@ -1,0 +1,93 @@
+#!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
+
+require 'io/wait'
+require 'logger'
+require 'socket'
+
+STDLOG = Logger.new(STDOUT)
+STDLOG.level = Logger::DEBUG
+
+def ping_process(pid)
+  begin
+    Process.kill(0, pid)
+    true
+  rescue Errno::ESRCH, Errno::EPERM
+    false
+  end
+end
+
+def start_tunnel(socket1, addr1, socket2, addr2, chunk_bytes: 1024*8)
+  Thread.new{
+    STDLOG.info("start tunnel: #{addr1} -> #{addr2}")
+    begin
+      while (true)
+        STDLOG.info("tunnel read: #{addr1} max #{chunk_bytes} bytes")
+        data = socket1.readpartial(chunk_bytes)
+        STDLOG.info("tunnel write: #{addr2} #{data.bytesize} bytes")
+        socket2.write(data)
+      end
+    rescue EOFError, SystemCallError
+      STDLOG.info("exception: #{$!}")
+      STDLOG.debug($!)
+    ensure
+      STDLOG.info("stop tunnel: #{addr1} -> #{addr2}")
+      socket1.close_read
+      socket2.close_write
+    end
+  }
+end
+
+if (ARGV.length != 2) then
+  puts "Usage: #{File.basename($0)} [CONNECT] [LISTEN]"
+  exit(1)
+end
+
+connect_socket_path = ARGV.shift
+listen_socket_path = ARGV.shift
+
+watch_pid = Process.ppid
+STDLOG.info("watch pid: #{watch_pid}")
+
+accept_polling_timeout_seconds = 0.1
+STDLOG.info("accept polling timeout: #{accept_polling_timeout_seconds} s")
+
+unless (File.socket? connect_socket_path) then
+  STDLOG.fatal("not found a connect socket: #{connect_socket_path}")
+  exit(1)
+end
+
+tunnel_thread_group = ThreadGroup.new
+begin
+  STDLOG.info("open listen socket: #{listen_socket_path}")
+  server_socket = UNIXServer.new(listen_socket_path)
+  catch(:end_of_tunnel) {
+    while (true)
+      until (server_socket.wait_readable(accept_polling_timeout_seconds) != nil)
+        ping_process(watch_pid) or throw(:end_of_tunnel)
+      end
+      listen_socket = server_socket.accept
+      connect_socket = UNIXSocket.new(connect_socket_path)
+      tunnel_thread_group.add(start_tunnel(listen_socket, listen_socket.local_address.inspect_sockaddr,
+                                           connect_socket, connect_socket.remote_address.inspect_sockaddr))
+      tunnel_thread_group.add(start_tunnel(connect_socket, connect_socket.remote_address.inspect_sockaddr,
+                                           listen_socket, listen_socket.local_address.inspect_sockaddr))
+      ping_process(watch_pid) or throw(:end_of_tunnel)
+    end
+  }
+
+  STDLOG.info("wait to end of connections")
+  for thread in tunnel_thread_group.list
+    thread.join
+  end
+rescue
+  STDLOG.fatal($!)
+  exit(1)
+end
+
+exit(0)
+
+# Local Variables:
+# mode: Ruby
+# indent-tabs-mode: nil
+# End:

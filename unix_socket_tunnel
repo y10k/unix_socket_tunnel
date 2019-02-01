@@ -99,7 +99,7 @@ end
 
 listen_socket_dir_stat = File.stat(listen_socket_dir)
 listen_socket_dir_mode = listen_socket_dir_stat.mode & 07777
-dir_access_deny_bits   = listen_socket_dir_stat.mode & dir_access_deny_mode_mask
+dir_access_deny_bits   = listen_socket_dir_mode & dir_access_deny_mode_mask
 listen_socket_dir_mode_log    = '%04o' % listen_socket_dir_mode
 dir_access_deny_bits_log      = '%04o' % dir_access_deny_bits
 dir_access_deny_mode_mask_log = '%04o' % dir_access_deny_mode_mask

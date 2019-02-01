@@ -3,6 +3,10 @@ unix_socket_tunnel
 
 unix domain socket tunnel utility.
 
+Requirements
+------------
+Ruby is required because this utility is ruby script.
+
 Description
 -----------
 
@@ -37,6 +41,3 @@ Usage: unix_socket_tunnel [options] CONNECT_PATH LISTEN_PATH
         --dir-access-deny-mode-mask=OCTETS
 ```
 
-Requirements
-------------
-Ruby is required because this utility is ruby script.

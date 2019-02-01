@@ -25,7 +25,7 @@ It is supposed to tunnel a socket of ssh-agent.
 Usage
 -----
 
-```shell
+```sh
 $ unix_socket_tunnel -h
 Usage: unix_socket_tunnel [options] CONNECT_PATH LISTEN_PATH
     -v, --verbose

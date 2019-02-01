@@ -48,6 +48,9 @@ dir_access_deny_mode_mask = 0077
 
 opts = OptionParser.new
 opts.banner = "Usage: #{File.basename($0)} [options] CONNECT_PATH LISTEN_PATH"
+opts.on('-v', '--verbose') {
+  STDLOG.level = Logger::INFO
+}
 opts.on('-l', '--log-level=LEVEL', %w[ debug info warn error fatal ]) {|level|
   STDLOG.level = level
 }

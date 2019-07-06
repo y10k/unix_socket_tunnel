@@ -40,6 +40,7 @@ Usage: unix_socket_tunnel [options] CONNECT_PATH LISTEN_PATH
         --accept-timeout=SECONDS
         --io-chunk-size=BYTES
     -u, --umask=OCTETS
+    -m, --unix-socket-mode=OCTETS
         --[no-]dir-owned
         --dir-access-deny-mode-mask=OCTETS
 ```

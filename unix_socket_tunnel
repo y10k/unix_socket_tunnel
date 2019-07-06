@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 # -*- coding: utf-8 -*-
 
+require 'fileutils'
 require 'io/wait'
 require 'logger'
 require 'optparse'
@@ -45,6 +46,7 @@ watch_pid = Process.ppid
 accept_polling_timeout_seconds = 0.1
 io_chunk_bytes = 1024 * 8
 File.umask(0077)
+unix_socket_mode = 0600
 dir_should_be_owned = true
 dir_access_deny_mode_mask = 0077
 
@@ -67,6 +69,9 @@ opts.on('--io-chunk-size=BYTES', Integer) {|bytes|
 }
 opts.on('-u', '--umask=OCTETS', Integer) {|octets|
   File.umask(octets)
+}
+opts.on('-m', '--unix-socket-mode=OCTETS', Integer) {|octets|
+  unix_socket_mode = octets
 }
 opts.on('--[no-]dir-owned') {|flag|
   dir_should_be_owned = flag
@@ -131,6 +136,8 @@ tunnel_thread_group = ThreadGroup.new
 begin
   STDLOG.info("open listen socket: #{listen_socket_path}")
   server_socket = UNIXServer.new(listen_socket_path)
+  STDLOG.info('unix socket mode: %04o' % unix_socket_mode)
+  FileUtils.chmod(unix_socket_mode, listen_socket_path)
   catch(:end_of_tunnel) {
     while (true)
       until (server_socket.wait_readable(accept_polling_timeout_seconds) != nil)
